@@ -1,0 +1,10 @@
+GITLAB_USERNAME=roperscrossroads
+GIT_DEFAULT_BRANCH=main
+GIT_EMAIL=adam.r.roper@gmail.com
+GIT_NAME=Adam\ Roper
+GIT_PROTOCOL=ssh
+GITHUB_USERNAME=roperscrossroads
+GPG_SIGNING_KEY=''
+GPG_SIGNING_AGENT=''
+MERGE_TOOL=delta
+SSH_IDENTITY_AGENT=''

@@ -1,0 +1,1 @@
+export DOROTHY_THEME=starship
