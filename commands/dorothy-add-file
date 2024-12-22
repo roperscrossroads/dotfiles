@@ -1,0 +1,294 @@
+#!/usr/bin/env bash
+
+# TODO: add flag for `minimal` so that one can quickly wrap scripts in the
+# dorothy command pattern
+
+function dorothy_add_file() (
+	source "$DOROTHY/sources/bash.bash"
+
+	# =====================================
+	# Help
+
+	function help {
+		cat <<-EOF >/dev/stderr
+			USAGE:
+			  dorothy-add-file -[arstss] <filename>
+
+			      DESCRIPTION:
+			      Utility for quickly adding new files to dorothy core/user with necessary
+			      boilerplate.
+
+		EOF
+		if test "$#" -ne 0; then
+			echo-error "$@"
+		fi
+		return 22 # EINVAL 22 Invalid argument
+	}
+
+	# =====================================
+	# Template components
+
+	function command_test_template() {
+		local command_name=$1
+		# if test "$add_flags" = "yes"; then
+		cat <<-EOF
+			# ============================================
+			# TESTS FOR \`${command_name^^}\`
+
+			function ${command_name}_test() (
+				source "\$DOROTHY/sources/bash.bash"
+				echo-segment --h1="TEST: \$0"
+				echo-segment --g1="TEST: \$0"
+				return 0
+			)
+
+		EOF
+		# fi
+	}
+
+	function flags_template() {
+		if test "$add_flags" = "yes"; then
+			cat <<-EOF
+				# =====================================
+				# ARGS FOR \`${new_name^^}\`
+
+				local item action=''
+				while test "\$#" -ne 0; do
+				  item="\$1"
+				  shift
+				  case "\$item" in
+				    '--help' | '-h') help ;;
+				    *)
+				    if test -z "\$action"; then
+					    action="\$item"
+				    else
+					    help "An unrecognised argument was provided: \$item"
+				    fi
+				    ;;
+				  esac
+				done
+
+			EOF
+		fi
+	}
+	function help_template() {
+		local eof_end_hack="EOF"
+		cat <<-EOF
+			  function help {
+			    cat <<-EOF >/dev/stderr
+			      USAGE:
+			        $new_name ...
+
+			      DESCRIPTION:
+			        ...
+
+			$eof_end_hack
+			    if test "\$#" -ne 0; then
+			    echo-error "\$@"
+			    fi
+			    return 22 # EINVAL 22 Invalid argument
+			  }
+
+		EOF
+	}
+
+	# ============================================
+	# Main template files
+
+	function command_normal_template() {
+		local command_name="${1//-/_}"
+		# FIX: the bottom-of-file call statement needs to account for
+		# test function
+
+		cat <<-EOF
+			#!/usr/bin/env bash
+
+			$(command_test_template $command_name)
+			# =====================================
+			# MAIN COMMAND \`${new_name^^}\`
+
+			function $command_name() (
+			  source "\$DOROTHY/sources/bash.bash"
+
+			  $(help_template)
+			  $(flags_template)
+			  # =====================================
+			  # Action
+
+			  if test -z "\$action"; then
+			    help "No <new_name> provided."
+			  else
+			    :
+			  fi
+			)
+
+			# Fire if invoked standalone
+			if test "\$0" = "\${BASH_SOURCE[0]}"; then
+			  $command_name "\$@"
+			fi
+		EOF
+	}
+	function command_stdin_args_template() {
+		echo "Stdin args template hasn't been implemented yet..."
+	}
+	function command_setup_util_template() {
+		local command_name="${1//-/_}"
+		cat <<-EOF
+			#!/usr/bin/env bash
+
+			function $command_name() (
+			  source "\$DOROTHY/sources/bash.bash"
+
+			  # improve performance
+			  if is-needle --quiet "$@" && ! is-needle --upgrade "$@" && ! is-needle --uninstall "$@" && command-exists {REPLACE_ME}; then
+			    return 0
+			  fi
+
+			        # Code goes here...
+
+			)
+
+			# Fire if invoked standalone
+			if test "\$0" = "\${BASH_SOURCE[0]}"; then
+			  $command_name "\$@"
+			fi
+		EOF
+	}
+	function config_template() {
+		cat <<-EOF
+			#!/usr/bin/env bash
+			# do not use \$(export) keyword in this file:
+			# shellcheck disable=SC2034
+		EOF
+	}
+	function source_file_template() {
+		:
+	}
+
+	# ============================================
+
+	function add_new_file() {
+		# Base dir - core | user
+		local base="$DOROTHY/user"
+		if test "$is_core" = "yes"; then
+			base="$DOROTHY"
+		fi
+
+		# Subdir - commands | config | sources
+		local sub_dir='commands'
+		case "$file_type" in
+		normal | stdin | util)
+			sub_dir='commands'
+			is_command='yes'
+			;;
+		config)
+			sub_dir='config'
+			is_config='yes'
+			;;
+		source)
+			sub_dir='sources'
+			is_source='yes'
+			;;
+		esac
+
+    # Is local dir
+		if test "$hidden" = "yes"; then
+			sub_dir="$sub_dir.local"
+		fi
+
+    # Put together final dest
+		local final_dest="$base/$sub_dir/$new_name"
+
+		# Make sure we don't override an existing file
+		if [ -e "$final_dest" ]; then
+			echo "The file [$final_dest] already exists."
+			return 0
+		fi
+
+		# Create the actual file
+		if test "$is_config" = 'yes'; then
+			config_template >"$final_dest"
+		elif test "$is_command" = 'yes'; then
+			case $file_type in
+			normal)
+				command_normal_template "$new_name" >"$final_dest"
+				;;
+			stdin)
+				command_stdin_args_template "$new_name" >"$final_dest"
+				;;
+			util)
+				command_setup_util_template "$new_name" >"$final_dest"
+				;;
+			esac
+		elif test "$is_source" = 'yes'; then
+		  # FIX: i need to add the file extension to source files
+			source_file_template >"$final_dest"
+		fi
+
+		chmod +x "$final_dest"
+
+		echo "$final_dest"
+	}
+
+	# =====================================
+	# Input args
+
+	# process
+	local item new_name='' flags=''
+	local is_core='no' hidden='no' is_config='no' for_shell='bash'
+	local is_command='' is_config='' is_source=''
+	local edit='no' add_help='no' add_flags='no'
+	local minimal='no' complex='no'
+
+	# normal | stdin | util | config | source
+	local file_type='normal'
+
+	while test "$#" -ne 0; do
+		item="$1"
+		shift
+		case "$item" in
+		'--help' | '-h') help ;;
+		# '-c' | '--core' ) is_core='yes' ;;
+		'--type='*) file_type="${item#*--type=}" ;;
+		'-'*)
+			flags="${item#*-}"
+			for ((i = 0; i < ${#flags}; i++)); do
+				char="${flags:i:1}"
+				case "$char" in
+				c) is_core='yes' ;;    # core
+				l) hidden='yes' ;;     # secret
+				G) is_config='yes' ;;  # config
+				S) for_shell='sh' ;;   # shell
+				Z) for_shell='zsh' ;;  # shell
+				F) for_shell='fish' ;; # shell
+				N) for_shell='nu' ;;   # shell
+				E) edit='yes' ;;       # edit
+				H) add_help='yes' ;;   # add help
+				A) add_flags='yes' ;;  # add args processing
+				esac
+			done
+			;;
+		*)
+			if test -z "$new_name"; then
+				new_name="$item"
+			else
+				help "An unrecognised argument was provided: $item"
+			fi
+			;;
+		esac
+	done
+
+	# =====================================
+	# Action
+
+	if test -z "$new_name"; then
+		help "No <new_name> provided."
+	else
+		add_new_file
+	fi
+)
+
+# fire if invoked standalone
+if test "$0" = "${BASH_SOURCE[0]}"; then
+	dorothy_add_file "$@"
+fi

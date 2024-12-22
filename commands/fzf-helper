@@ -1,0 +1,537 @@
+#!/usr/bin/env bash
+
+# FIX: fzf picker does not close properly when opening the selection in browser.
+
+# TODO: Rename this to `fuzzy-picker`?
+
+# TODO: if no args, then cal a standard general purpose picker with
+# the most sensible / reasonable defaults handler
+
+# TODO: SYSTEM PICKER > SPOTLIGHT / ROFI / DMENU
+# - [ ]: migrate my existing spotling into this file.
+# - [ ]: create a custom rc file for the custom file browser window.
+# TEST: Revise the `/commands/launcher` script and see how it can be used to
+# make system binds.
+# And how can we manage OS keybindings -> applescript?? to set OS bindings?
+# TEST: >>> Revise calling scripts from kmonad.
+
+# TODO: Support other fuzzy matchers
+# ! Use setup utils to install absent commands.
+# fzf [x] already exists in dorothy.
+# [ ] skim
+# [ ] nucleo
+
+# NOTE: Macos: set keyboard shortcuts programmatically
+# https://stackoverflow.com/questions/823705/programatically-get-set-mac-osx-default-system-keyboard-shortcut
+# https://apple.stackexchange.com/questions/115675/set-services-keyboard-shortcut-via-script-osx
+# https://superuser.com/questions/1139859/os-x-create-keyboard-shortcut-programmatically
+# https://apple.stackexchange.com/questions/438762/how-can-i-run-a-script-to-add-keyboard-shortcuts-on-macos
+# https://apple.stackexchange.com/questions/334683/how-to-script-a-global-keyboard-shortcut-in-macos
+# https://unix.stackexchange.com/questions/367632/how-to-programmatically-set-keyboard-shortcut-on-mac
+# https://www.reddit.com/r/shortcuts/comments/ooo4wp/tip_programmatically_creating_shortcuts_on_macos/
+
+# TODO: Dynamically put together keybinds-legend, that is shown on above the
+# search list.
+# --header $'CTRL-O (open in browser) ╱ ALT-E (open in editor)\n\n' \
+
+# Mankier: FZF = https://www.mankier.com/1/fzf#Key/Event_Bindings-Command_Execution
+
+# More FZF examples / code:
+# https://github.com/junegunn/fzf/wiki
+# https://junegunn.github.io/fzf/getting-started/
+# https://github.com/junegunn/fzf/wiki/Related-projects
+# https://github.com/junegunn/fzf/wiki/examples#dotfiles-management
+# https://thevaluable.dev/practical-guide-fzf-example/
+# https://github.com/horseinthesky/dotfiles/blob/master/files/zsh/fzf-git-functions.zsh
+
+function fzf_helper() (
+  source "$DOROTHY/sources/bash.bash"
+
+  DEBUG_FZF="yes"
+
+  local LOG_FILE="$DOROTHY/user/fzf_log.txt"
+
+  local CURRENT_PICKER=''
+
+  __debug_lines() {
+    if (("$DEBUG_FZF" == "yes")); then
+      __print_lines "[fzf-helper (current = $CURRENT_PICKER)]: $1"
+    fi
+  }
+
+  # TODO: refactor git stuff into a git-util? or its own helpers section.
+
+  # TODO: options
+  # - [ ] target a specific path
+  # - [ ] just pick files in general.
+
+  # SOURCES__FZF_HACK=${BASH_SOURCE[0]:-${(%):-%x}}
+  local SOURCES__FZF_HACK="$DOROTHY/user/sources/__fzf_action_callbacks.sh"
+  SOURCES__FZF_HACK=$(readlink -f "$SOURCES__FZF_HACK" 2>/dev/null ||
+    /usr/bin/ruby --disable-gems -e 'puts File.expand_path(ARGV.first)' "$SOURCES__FZF_HACK" 2>/dev/null)
+  # echo "SOURCES__FZF_HACK = $SOURCES__FZF_HACK"
+
+  # ===========================================================================
+  # Helpers
+
+  # Could this use / support multiple fuzzy matchers?
+  picker_cmd() {
+    # put the default key as configurable
+    fzf --height=50% --tmux 90%,70% \
+      --layout=reverse --multi --min-height=20 --border \
+      --border-label-pos=2 \
+      --color='header:italic:underline,label:blue' \
+      --preview-window='right,50%,border-left' \
+      --bind='ctrl-d:change-preview-window(down,50%,border-top|hidden|)' "$@"
+  }
+
+  is_git_repo() {
+    git rev-parse HEAD >/dev/null 2>&1 && return
+    [[ -n $TMUX ]] && tmux display-message "Not in a git repository"
+    return 1
+  }
+
+  # Expects optionally one and only one arg $1
+  get_git_color() {
+    if [[ -n ${NO_COLOR-} ]]; then
+      echo never
+    elif [[ $# -gt 0 ]] && [[ -n ${FZF_GIT_PREVIEW_COLOR-} ]]; then
+      echo "$FZF_GIT_PREVIEW_COLOR"
+    else
+      echo "${FZF_GIT_COLOR:-always}"
+    fi
+  }
+
+  get_cat_command() {
+    if [[ -n ${FZF_GIT_CAT-} ]]; then
+      echo "$FZF_GIT_CAT"
+      return
+    fi
+
+    local bat_opts=(
+      --style="'${BAT_STYLE:-full}'"
+      --color="$(get_git_color .)"
+      --pager="never"
+    )
+
+    # Sometimes bat is installed as batcat
+    if command -v batcat >/dev/null; then
+      echo "batcat ${bat_opts[*]}"
+    elif command -v bat >/dev/null; then
+      echo "bat ${bat_opts[*]}"
+    else
+      echo cat
+    fi
+  }
+
+  get_git_pager() {
+    local pager
+    pager="${FZF_GIT_PAGER:-${GIT_PAGER:-$(git config --get core.pager 2>/dev/null)}}"
+    echo "${pager:-cat}"
+  }
+
+  close_picker() { exit 0; }
+
+  # ===========================================================================
+  # PICKER BUILD FUNCTIONS
+  #
+  # These are used in order to define a picker. See pickers below.
+
+  # Move this to other dorothy helpers?
+  get_git_data() {
+    branches() {
+
+      # --format=<format>
+      #     A string that interpolates %(fieldname) from a ref being shown and the object it points at.
+      #     In addition, the string literal %% renders as % and %xx - where xx are hex digits - renders
+      #     as the character with hex code xx. For example, %00 interpolates to \0 (NUL), %09 to \t
+      #     (TAB), and %0a to \n (LF).
+      #
+      #     When unspecified, <format> defaults to %(objectname) SPC %(objecttype) TAB %(refname).
+
+      git branch "$@" --sort=-committerdate --sort=-HEAD \
+        --format=$'%(HEAD) %(color:yellow)%(refname:short)\t%(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)' \
+        --color="$(get_git_color)" | column -ts$'\t'
+    }
+    refs() {
+      git for-each-ref "$@" --sort=-creatordate --sort=-HEAD --color=$(get_git_color) --format=$'%(if:equals=refs/remotes)%(refname:rstrip=-2)%(then)%(color:magenta)remote-branch%(else)%(if:equals=refs/heads)%(refname:rstrip=-2)%(then)%(color:brightgreen)branch%(else)%(if:equals=refs/tags)%(refname:rstrip=-2)%(then)%(color:brightcyan)tag%(else)%(if:equals=refs/stash)%(refname:rstrip=-2)%(then)%(color:brightred)stash%(else)%(color:white)%(refname:rstrip=-2)%(end)%(end)%(end)%(end)\t%(color:yellow)%(refname:short) %(color:green)(%(creatordate:relative))\t%(color:blue)%(subject)%(color:reset)' | column -ts$'\t'
+    }
+    hashes() {
+      git log --date=short --format="%C(green)%C(bold)%cd %C(auto)%h%d %s (%an)" --graph --color=$(get_git_color) "$@"
+    }
+    case "$1" in
+    branches)
+      echo $'CTRL-O (open in browser) ╱ ALT-A (show all branches)\n'
+      branches
+      ;;
+    all-branches)
+      echo $'CTRL-O (open in browser)\n'
+      branches -a
+      ;;
+    hashes)
+      echo $'CTRL-O (open in browser) ╱ CTRL-D (diff)\nCTRL-S (toggle sort) ╱ ALT-A (show all hashes)\n'
+      hashes
+      ;;
+    all-hashes)
+      echo $'CTRL-O (open in browser) ╱ CTRL-D (diff)\nCTRL-S (toggle sort)\n'
+      hashes --all
+      ;;
+    refs)
+      echo $'CTRL-O (open in browser) ╱ ALT-E (examine in editor) ╱ ALT-A (show all refs)\n'
+      refs --exclude='refs/remotes'
+      ;;
+    all-refs)
+      echo $'CTRL-O (open in browser) ╱ ALT-E (examine in editor)\n'
+      refs
+      ;;
+    nobeep) ;;
+    *) exit 1 ;;
+    esac
+  }
+
+  # BUG: for some reason FZF is not closing properly. BUT, when using the original
+  # posix script being called by `execute-silent: bash /path/to/script.sh` then,
+  # it closes correctly.
+  # TEST:
+  # 1) Move this to a posix script and see if this works?
+  # 2) If (1) works, then move all the functionality to a dorothy command, and
+  # call this command via the posix script as a middle man, and see if FZF closes
+  # properly.
+  #
+  # Move this to other dorothy helpers?
+  open_in_browser() {
+    # Calling script with multiple args.
+
+    # echo "???"
+
+    # __debug_lines "open in browser"
+
+    # this is only when the scripting is initiating on shell load.
+    # maybe should unset the vars instead.
+    branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    if [[ $branch = HEAD ]]; then
+      branch=$(git describe --exact-match --tags 2>/dev/null || git rev-parse --short HEAD)
+    fi
+
+    # Only supports GitHub for now
+    case "$1" in
+    commit)
+      hash=$(grep -o "[a-f0-9]\{7,\}" <<<"$2")
+      path=/commit/$hash
+      ;;
+    branch | remote-branch)
+      branch=$(sed 's/^[* ]*//' <<<"$2" | cut -d' ' -f1)
+      remote=$(git config branch."${branch}".remote || echo 'origin')
+      branch=${branch#$remote/}
+      path=/tree/$branch
+      ;;
+    remote)
+      remote=$2
+      path=/tree/$branch
+      ;;
+    file) path=/blob/$branch/$(git rev-parse --show-prefix)$2 ;;
+    tag) path=/releases/tag/$2 ;;
+    *) exit 1 ;;
+    esac
+
+    remote=${remote:-$(git config branch."${branch}".remote || echo 'origin')}
+    remote_url=$(git remote get-url "$remote" 2>/dev/null || echo "$remote")
+
+    if [[ $remote_url =~ ^git@ ]]; then
+      url=${remote_url%.git}
+      url=${url#git@}
+      url=https://${url/://}
+    elif [[ $remote_url =~ ^http ]]; then
+      url=${remote_url%.git}
+    fi
+
+    exit 0
+
+    case "$(uname -s)" in
+    Darwin) open "$url$path" ;;
+    *) xdg-open "$url$path" ;;
+    esac
+
+    # exit 0
+    close_picker
+  }
+
+  # ===========================================================================
+  # Pickers
+  #
+
+  # TODO: try
+  # --cycle
+
+  # NOTE: COMMAND EXECUTION (FZF Man page)
+  # --
+  # With execute(...) action, you can execute arbitrary commands without leaving
+  # fzf. For example, you can turn fzf into a simple file browser by binding enter
+  # key to less command like follows.
+  # --
+  #    fzf --bind "enter:execute(less {})"
+  # --
+  # You can use the same placeholder expressions as in --preview.
+  # --
+  # fzf switches to the alternate screen when executing a command. However, if the
+  # command is expected to complete quickly, and you are not interested in its
+  # output, you might want to use execute-silent instead, which silently executes
+  # the command without the switching. Note that fzf will not be responsive until
+  # the command is complete. For asynchronous execution, start your command as a
+  # background process (i.e. appending &).
+  # --
+  # On *nix systems, fzf runs the command with $SHELL -c if SHELL is set, otherwise
+  # with sh -c, so in this case make sure that the command is POSIX-compliant.
+  # --
+  # become(...) action is similar to execute(...), but it replaces the current fzf
+  # process with the specified command using execve(2) system call.
+  # --
+  #    fzf --bind "enter:become(vim {})"
+
+  # TODO: Refactor options into their own arrays, so that you can eg. reuse the
+  # C-o: open in browser bind without having to redefine it every time.
+  # >>> Also, allow for dynamically providing which key should be used, eg. `o`
+  # for opening in browser.
+
+  picker__branches() {
+    is_git_repo || return
+    local str_preview_cmd
+
+    str_preview_cmd="git log --oneline --graph --date=short --color=$(get_git_color .) \
+            --pretty='format:%C(auto)%cd %h%d %s' \$(sed s/^..// <<< {} | cut -d' ' -f1) --"
+
+    # --bind 'ctrl-o:execute-silent: return 0; fzf-helper --open-in-browser branch {}' \
+    fzf-helper --get-data branches |
+      picker_cmd --ansi \
+        --border-label '🌲 Branches' \
+        --header-lines 2 \
+        --tiebreak begin \
+        --preview-window down,border-top,40% \
+        --color hl:underline,hl+:underline \
+        --no-hscroll \
+        --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
+        --bind "ctrl-o:execute-silent:bash $SOURCES__FZF_HACK branch {}" \
+        --bind 'alt-a:change-border-label(🌳 All branches)+reload:bash fzf-helper --get-data all-branches' \
+        --preview "$str_preview_cmd" \
+        "$@" | sed 's/^..//' | cut -d' ' -f1
+  }
+
+  picker__files() {
+    is_git_repo || return
+    local root query=''
+    root=$(git rev-parse --show-toplevel)
+    [[ $root != "$PWD" ]] && query='!../ '
+
+    (
+      git -c color.status=$(get_git_color) status --short --no-branch
+      git ls-files "$root" | grep -vxFf <(
+        git status -s | grep '^[^?]' | cut -c4-
+        echo :
+      ) | sed 's/^/   /'
+    ) |
+      picker_cmd -m --ansi --nth 2..,.. \
+        --border-label '📁 Files' \
+        --header $'CTRL-O (open in browser) ╱ ALT-E (open in editor)\n\n' \
+        --bind "ctrl-o:execute-silent:bash $SOURCES__FZF_HACK file {-1}" \
+        --bind "alt-e:execute:${EDITOR:-vim} {-1} > /dev/tty" \
+        --query "$query" \
+        --preview "git diff --no-ext-diff --color=$(get_git_color .) -- {-1} | $(get_git_pager); $(get_cat_command) {-1}" "$@" |
+      cut -c4- | sed 's/.* -> //'
+  }
+
+  picker__tags() {
+    is_git_repo || return
+    git tag --sort -version:refname |
+      picker_cmd --preview-window right,70% \
+        --border-label '📛 Tags' \
+        --header $'CTRL-O (open in browser)\n\n' \
+        --bind "ctrl-o:execute-silent:fzf-helper --open-in-browser tag {}" \
+        --preview "git show --color=$(get_git_color .) {} | $(get_git_pager)" "$@"
+  }
+
+  picker__hashes() {
+    is_git_repo || return
+    fzf-helper --get-data hashes |
+      picker_cmd --ansi --no-sort --bind 'ctrl-s:toggle-sort' \
+        --border-label '🍡 Hashes' \
+        --header-lines 3 \
+        --color hl:underline,hl+:underline \
+        --bind "ctrl-o:execute-silent:fzf-helper --open-in-browser commit {}" \
+        --bind "ctrl-d:execute:grep -o '[a-f0-9]\{7,\}' <<< {} | head -n 1 | xargs git diff --color=$(get_git_color) > /dev/tty" \
+        --bind "alt-a:change-border-label(🍇 All hashes)+reload:bash fzf-helper --get-data all-hashes" \
+        --preview "grep -o '[a-f0-9]\{7,\}' <<< {} | head -n 1 | xargs git show --color=$(get_git_color .) | $(get_git_pager)" "$@" |
+      awk 'match($0, /[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*/) { print substr($0, RSTART, RLENGTH) }'
+  }
+
+  picker__remotes() {
+    is_git_repo || return
+    git remote -v | awk '{print $1 "\t" $2}' | uniq |
+      picker_cmd --tac \
+        --border-label '📡 Remotes' \
+        --header $'CTRL-O (open in browser)\n\n' \
+        --bind "ctrl-o:execute-silent:bash fzf-helper --open-in-browser remote {1}" \
+        --preview-window right,70% \
+        --preview "git log --oneline --graph --date=short --color=$(get_git_color .) --pretty='format:%C(auto)%cd %h%d %s' '{1}/$(git rev-parse --abbrev-ref HEAD)' --" "$@" |
+      cut -d$'\t' -f1
+  }
+
+  picker__stashes() {
+    is_git_repo || return
+    git stash list | picker_cmd \
+      --border-label '🥡 Stashes' \
+      --header $'CTRL-X (drop stash)\n\n' \
+      --bind 'ctrl-x:reload(git stash drop -q {1}; git stash list)' \
+      -d: --preview "git show --color=$(get_git_color .) {1} | $(get_git_pager)" "$@" |
+      cut -d: -f1
+  }
+
+  # ref logs (it starts with `l` so that we can use `l` as the keybind.
+  picker__reflogs() {
+    is_git_repo || return
+    git reflog --color=$(get_git_color) --format="%C(blue)%gD %C(yellow)%h%C(auto)%d %gs" | picker_cmd --ansi \
+      --border-label '📒 Reflogs' \
+      --preview "git show --color=$(get_git_color .) {1} | $(get_git_pager)" "$@" |
+      awk '{print $1}'
+  }
+
+  picker__each_ref() {
+    is_git_repo || return
+    fzf-helper refs | picker_cmd --ansi \
+      --nth 2,2.. \
+      --tiebreak begin \
+      --border-label '☘️  Each ref' \
+      --header-lines 2 \
+      --preview-window down,border-top,40% \
+      --color hl:underline,hl+:underline \
+      --no-hscroll \
+      --bind 'ctrl-/:change-preview-window(down,70%|hidden|)' \
+      --bind "ctrl-o:execute-silent:bash fzf-helper --open-in-browser {1} {2}" \
+      --bind "alt-e:execute:${EDITOR:-vim} <(git show {2}) > /dev/tty" \
+      --bind "alt-a:change-border-label(🍀 Every ref)+reload:bash fzf-helper --get-data all-refs" \
+      --preview "git log --oneline --graph --date=short --color=$(get_git_color .) --pretty='format:%C(auto)%cd %h%d %s' {2} --" "$@" |
+      awk '{print $2}'
+  }
+
+  picker__worktrees() {
+    is_git_repo || return
+    git worktree list | picker_cmd \
+      --border-label '🌴 Worktrees' \
+      --header $'CTRL-X (remove worktree)\n\n' \
+      --bind 'ctrl-x:reload(git worktree remove {1} > /dev/null; git worktree list)' \
+      --preview "
+      git -c color.status=$(get_git_color .) -C {1} status --short --branch
+      echo
+      git log --oneline --graph --date=short --color=$(get_git_color .) --pretty='format:%C(auto)%cd %h%d %s' {2} --
+    " "$@" |
+      awk '{print $1}'
+  }
+
+  # ===========================================================================
+  # Default Pickers
+  #
+
+  # --header "$(get_fzf_heading "You have to select an ACTION")"
+  # "${fzf_base_opts[@]}"
+  picker__default() {
+    __print_lines "${pipe_inputs[@]}" | picker_cmd \
+      --border-label '🌴 [Dorothy]: Choose' \
+      --header $'CTRL-X (remove worktree)\n\n' \
+      --cycle
+  }
+
+  # ===========================================================================
+  # Test Pickers
+  #
+
+
+  picker__choose_test() {
+    choose "CHOOSE: Select desired dishes from our menu." --linger --required --confirm --multi \
+      --label \
+      --label=first \
+      --visual='${LABEL@U} = ${VALUE-}' --default-fuzzy=burger \
+      --return='Selected: ${VALUE-}' \
+      --plugin=fzf \
+      -- main burger main kebab soda coke soda fanta alkohol LeWine alkohol Carlsberg33c desert cake desert icecream
+
+    # because fzf-helper is called recursively, we need to exit immediately
+    # here in our test
+    exit 0
+  }
+
+  # ===========================================================================
+  # Arguments
+  #
+
+  # process our own arguments, delegate everything else to stdinargs
+  local item action='' pipe_inputs=()
+  while test "$#" -ne 0; do
+    item="$1"
+    shift
+    case "$item" in
+    '--help' | '-h') help ;;
+    # ====================================
+    # TEST PICKERS
+    'choose_test') action=$item ;;
+    # ====================================
+    # BASE PICKERS
+    # These can be used standalone or from binding.
+    'branches') action=$item ;;
+    'each_ref') action="$item" ;;
+    'files') action="$item" ;;
+    'hashes') action="$item" ;;
+    'reflogs') action="$item" ;;
+    'remotes') action="$item" ;;
+    'stashes') action="$item" ;;
+    'tags') action="$item" ;;
+    'worktrees') action="$item" ;;
+    # ====================================
+    # BIND CALLBACK ACTIONS
+    # There are called by the base pickers internally
+    --open-in-browser | '-o')
+      # echo "--open: $*"
+      open_in_browser "$@"
+      ;;
+    --get-data | '-d')
+      get_git_data "$@"
+      return
+      ;;
+      # ====================================
+      # using stdin -> but i use the --pipe namespace because i dont want to
+      # overwrite --stdin since i dont know how it works with stdinargs.
+    '--pipe')
+      source "$DOROTHY/sources/stdinargs.bash"
+      function on_input {
+        pipe_inputs+=("$1")
+      }
+      # echo "inside --pipe"
+      stdinargs "$@"
+      shift $#
+      break
+      ;;
+    *) help "An unrecognised argument was provided: $item" ;;
+    esac
+  done
+
+  # Check
+  if [[ -z "$action" ]]; then
+    if test "${#pipe_inputs[@]}" -gt 0; then
+      action="default"
+    else
+      help 'No action was provided.'
+    fi
+  fi
+
+  # Run picker
+  if test "$(type -t "picker__$action")" = 'function'; then
+    "picker__$action"
+    return
+  else
+    echo-style --error="Action [$action] not yet implemented." >/dev/stderr
+    return 78 # ENOSYS 78 Function not implemented
+  fi
+)
+
+# fire if invoked standalone
+if test "$0" = "${BASH_SOURCE[0]}"; then
+  fzf_helper "$@"
+fi
