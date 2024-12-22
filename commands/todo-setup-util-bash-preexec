@@ -1,0 +1,4 @@
+# todo
+# for atuin
+# https://docs.atuin.sh/guide/installation/#installing-the-shell-plugin
+# curl https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh -o ~/.bash-preexec.sh

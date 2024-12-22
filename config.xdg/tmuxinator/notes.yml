@@ -1,0 +1,62 @@
+name: notes
+root: ~/notes
+
+# Optional tmux socket
+# socket_name: foo
+
+# Note that the pre and post options have been deprecated and will be replaced by
+# project hooks.
+
+# Project hooks
+
+# Runs on project start, always
+# on_project_first_start: xdg-open http://localhost:3000
+
+# Run on project start, the first time
+
+# Run on project start, after the first time
+# on_project_restart: command
+
+# Run on project exit ( detaching from tmux session )
+# on_project_exit: command
+
+# Run on project stop
+#on_project_stop: cd ~/dev/ai/docker; docker-compose down
+
+# Runs in each window and pane before window/pane specific commands. Useful for setting up interpreter versions.
+# pre_window: rbenv shell 2.0.0-p247
+
+# Pass command line options to tmux. Useful for specifying a different tmux.conf.
+# tmux_options: -f ~/.tmux.mac.conf
+
+# Change the command to call tmux.  This can be used by derivatives/wrappers like byobu.
+# tmux_command: byobu
+
+# Specifies (by name or index) which window will be selected on project startup. If not set, the first window is used.
+startup_window: notes1
+
+# Specifies (by index) which pane of the specified window will be selected on project startup. If not set, the first pane is used.
+startup_pane: 1
+
+# Controls whether the tmux session should be attached to automatically. Defaults to true.
+# attach: false
+
+# tmux display-message -p "#{window_layout}" #gives you a custom layout
+
+windows:
+  - notes1:
+      root: ~/notes
+      layout: 967b,285x50,0,0[285x19,0,0{201x19,0,0,8,83x19,202,0,10},285x30,0,20{177x30,0,20,11,107x30,178,20,15}]
+      panes:
+        - ~/notes/dash/jrnl.sh
+        - zsh
+        - ~/notes/dash.sh
+        - ~/notes/dash.sh        
+  - notes2:
+      root: ~/notes
+      layout: 967b,285x50,0,0[285x19,0,0{201x19,0,0,8,83x19,202,0,10},285x30,0,20{177x30,0,20,11,107x30,178,20,15}]
+      panes:
+        - ~/notes/dash/jrnl.sh
+        - zsh
+        - ~/notes/dash.sh
+        - ~/notes/dash.sh
