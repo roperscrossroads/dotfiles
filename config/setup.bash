@@ -66,6 +66,7 @@ RPM_INSTALL=(
 	cowsay
 	direnv
 	dnf-plugins-core
+	duf
 	encfs
 	entr
 	expect
@@ -114,34 +115,35 @@ RPM_INSTALL=(
 # You can use `setup-mac-brew --configure` to configure some of these.
 # HOMEBREW_UNTAPS=()
 # HOMEBREW_TAPS=()
-HOMEBREW_FORMULAS=(
-	diff-so-fancy
-	direnv
-	figlet
-	findutils
-	git-extras
-	gpg-tui
-	lazygit
-	lua
-	luarocks
-	neofetch
-	ranger
-	readline
-	tmux
-)
+# HOMEBREW_FORMULAS=(
+# 	diff-so-fancy
+# 	direnv
+# 	figlet
+# 	findutils
+# 	git-extras
+# 	gpg-tui
+# 	lazygit
+# 	lua
+# 	luarocks
+# 	neofetch
+# 	ranger
+# 	readline
+# 	tmux
+# )
 
-HOMEBREW_SLOW_FORMULAS=(
-  gpg
-  shellcheck
-)
-HOMEBREW_CASKS=(
-  'breaktimer'
-  'discord'
-  'kitty'
-  'obsidian'
-  'qutebrowser'
-  'thefuck'
-)
+# HOMEBREW_SLOW_FORMULAS=(
+#   gpg
+#   shellcheck
+# )
+# HOMEBREW_CASKS=(
+#   'breaktimer'
+#   'discord'
+#   'kitty'
+#   'obsidian'
+#   'qutebrowser'
+#   'thefuck'
+# )
+
 # Rust / Cargo / Crates.io
 # Used by `setup-rust`
 CARGO_INSTALL=(
@@ -150,32 +152,34 @@ CARGO_INSTALL=(
   stylua
   bob-nvim
 )
-HOMEBREW_FONTS=(
-	'font-cantarell'
-	'font-cascadia-code'
-	'font-fira-code'
-	'font-fira-code-nerd-font'
-	'font-fira-mono'
-	'font-fira-mono-nerd-font'
-	'font-hack' # many editors require this
-	'font-hasklig'
-	'font-ibm-plex' # many editors require this
-	'font-inconsolata-go-nerd-font'
-	'font-inter' # many apps require this
-	'font-jetbrains-mono'
-	'font-jetbrains-mono-nerd-font'
-	'font-lato'
-	'font-maven-pro'
-	'font-monoid'
-	'font-montserrat'
-	'font-open-sans'
-	'font-oxygen'
-	'font-oxygen-mono'
-	'font-roboto'
-	'font-roboto-mono'
-	'font-source-code-pro' # many editors require this
-	'font-ubuntu'
-)
+
+# HOMEBREW_FONTS=(
+# 	'font-cantarell'
+# 	'font-cascadia-code'
+# 	'font-fira-code'
+# 	'font-fira-code-nerd-font'
+# 	'font-fira-mono'
+# 	'font-fira-mono-nerd-font'
+# 	'font-hack' # many editors require this
+# 	'font-hasklig'
+# 	'font-ibm-plex' # many editors require this
+# 	'font-inconsolata-go-nerd-font'
+# 	'font-inter' # many apps require this
+# 	'font-jetbrains-mono'
+# 	'font-jetbrains-mono-nerd-font'
+# 	'font-lato'
+# 	'font-maven-pro'
+# 	'font-monoid'
+# 	'font-montserrat'
+# 	'font-open-sans'
+# 	'font-oxygen'
+# 	'font-oxygen-mono'
+# 	'font-roboto'
+# 	'font-roboto-mono'
+# 	'font-source-code-pro' # many editors require this
+# 	'font-ubuntu'
+# )
+
 # HOMEBREW_UNINSTALL=()        # for casks and formulas
 # HOMEBREW_ENCODING_INSTALL='' # '', 'yes', 'no'
 

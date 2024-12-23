@@ -27,8 +27,9 @@ alias XDH="$XDG_DATA_HOME"
 # 	grep="grep --color=auto" \
 # 	diff="diff --color=auto" \
 # 	# ccat="highlight --out-format=ansi" # only linux
-alias xx="exec zsh"
-alias xxx="exec zsh && zsh -il"
+alias x="exec zsh -il"
+alias xx="exec elvish"
+alias xxx="exec fish -il"
 alias k="clear"
 alias less="less -r"
 alias md="mkdir -p"
@@ -244,6 +245,7 @@ alias lg="lazygit"
 alias gcbn="git-get-checked-out-branch-name"
 # list branches by last date modified
 alias gbld="git for-each-ref --sort=committerdate refs/heads/ --format='%(color: red)%(committerdate:short) %(color: cyan)%(refname:short)'"
+
 #-----------------------
 #---       GITHUB       ---
 #-----------------------
@@ -282,6 +284,21 @@ alias gpglk="gpg --list-keys"
 alias gpglkp="gpg --list-public-keys"
 alias gpglks="gpg --list-secret-keys"
 alias gpge="gpg --edit-keys"
+
+#--------------------------
+# Directories and files
+#--------------------------
+alias la='/usr/bin/ls'
+#alias la='ls -lAFh'
+alias ls='eza --color=always --long --all --header --icons --git'
+alias lsa='eza --color=always --long --all --sort=age --reverse --header --icons'
+alias lsf='fd --max-depth=1 --type=file'
+alias lst='eza --tree --level=2 --icons --color=always --git'
+alias lsdir='ls -ld *(/om[1])'
+alias drs="dirs -v"
+alias l="ls -la"
+alias ldot='ls -ld .*'
+
 
 #--------------------------
 #---       OTHERS       ---
@@ -333,27 +350,71 @@ if [[ -n ${ZSH_VERSION-} ]]; then
 	alias zdot='cd $ZDOTDIR'
 
 	# zsh pipes
-	alias -g H='| head'
-	alias -g T='| tail'
-	alias -g G='| grep -E'
 	alias -g S='| sort'
+	#todo: remove colors:
+	alias -g C='| sed -r "s/\x1b\[[0-9;]*m//g" | xsel --clipboard'
+	alias -g G='| grep -i --color=always'
+#	alias -g G='| grep -E'
+	alias -g H=' --help'
+	#alias -g H='| head'
 	alias -g L='| less'
 	alias -g M='| more'
+	alias -g NUL="> /dev/null 2>&1"
+	#alias -g R="2>&1 | tee output.txt"
+	alias -g T="| tail -n +2"
+	alias -g V=' --version'
+	alias -g W='| nvim -c "setlocal buftype=nofile bufhidden=wipe filetype=markdown" -c "nnoremap <buffer> q :q!<CR>" -'
+
+	# Suffix aliases
+	alias -s md=nvim
+	#alias -s txt=nvim
+	alias -s yaml=nvim
+	alias -s html='xdg-open'
 fi
+
+# Directories and files
+alias la='/usr/bin/ls'
+alias ls='eza --color=always --long --all --header --icons --git'
+alias lsa='eza --color=always --long --all --sort=age --reverse --header --icons'
+alias lsf='fd --max-depth=1 --type=file'
+alias lst='eza --tree --level=2 --icons --color=always --git'
+alias lsdir='ls -ld *(/om[1])'
+
+# incus aliases
+alias inc='incus console ubuntu --type=vga'
+## start and stop lxc vm with hybernated state
+## meaning all programs and windows will preserve
+alias inc--='incus stop --stateful ubuntu'
+alias inc-='incus stop ubuntu'
+
+# Commands shadow
+alias tf='terraform'
+alias lpf='list_project_files'
+alias watchtui='nodemon --signal SIGTERM -q --watch ~/.taskrc --ext taskrc --exec "tui --report current"'
+alias k9s='k9s -A'
+alias bfi='__create_branch_from_issue.sh'
+alias si='__search_internet.py'
+alias vm="nvim -c ':lua MiniFiles.open()'"
+alias aider='aider --model gpt-4o --dark-mode --no-auto-commits'
+alias aider-commit='aider --model gpt-4o --dark-mode'
+alias cat='bat --paging=never'
+alias bat='batcat'
+alias df=duf
+alias diff=colordiff
+#alias fd='fd --hidden'
+alias nv='neovide --multigrid --notabs'
+alias ra=yazi
+alias vim=nvim
+alias v=nvim
+alias watch=viddy
+alias ugu='ug -Q -. --view=nvim'
+
 # # single character shortcuts - be sparing!
 # alias _='sudo'
 alias c='clear'
 alias d='dirs -v | head -10'
 # alias v='vim'
 alias h='history'
-
-# # more ways to ls
-alias ll='ls -lFh'
-# alias l='ls -F'
-alias drs="dirs -v"
-alias l="ls -la"
-alias la='ls -lAFh'
-alias ldot='ls -ld .*'
 
 # fix typos
 alias quit='exit'
@@ -384,3 +445,41 @@ alias fd='find . -type d -name'
 alias ff='find . -type f -name'
 alias dud='du -d 1 -h'
 alias duf='du -sh *'
+
+## Kubernetes aliases
+alias kconf='__create_separate_kubeconfig.sh'
+alias kdump='kubectl get all --all-namespaces'
+alias kaf='kubectl apply -f'
+alias kdf='kubectl delete -f'
+alias kstart='~/dev/dotfiles/scripts/__kind_manager.sh --start'
+alias kstop='~/dev/dotfiles/scripts/__kind_manager.sh --stop'
+
+# Other
+alias aopa='~/dev/dotfiles/scripts/__toggle_alacritty_opacity.sh'
+alias atheme='~/dev/dotfiles/scripts/__swap_alacritty_theme.sh'
+alias adit='vim ~/.config/dorothy/sources/aliases.sh'
+alias abit='vim ~/.zsh_abbreviations'
+#alias ai='/home/ai/aicmd' #todo
+alias clock="__clock.sh &"
+alias dca='mux s dca'
+alias dev='cd ~/dev'
+alias loft='cd ~/loft'
+alias disk='gdu'
+alias dots='cd ~/dev/dotfiles && lg'
+alias fdit='vim ~/.zsh_functions'
+alias gcc='git diff --stat --cached origin/master' # Git Check Commit before pushing
+alias gs='git show'
+alias lvim='nvim -c "normal '\''0"'
+alias rm='rm -v'
+alias sr='omz reload'
+alias tedit='vim ~/.tmux.conf'
+alias vn='nvim /tmp/temp-$RANDOM.md'
+alias zedit='vim ~/.zshrc'
+alias dedit='direnv edit'
+# PROJECT: project
+alias pedit='nvim ~/projects.txt'
+alias zo='zoxide'
+
+# pbcopy / pbpaste
+alias pbcopy='xclip -selection clipboard'
+alias pbpaste='xclip -selection clipboard -o'
