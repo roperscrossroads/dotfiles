@@ -245,6 +245,36 @@ alias gcbn="git-get-checked-out-branch-name"
 # list branches by last date modified
 alias gbld="git for-each-ref --sort=committerdate refs/heads/ --format='%(color: red)%(committerdate:short) %(color: cyan)%(refname:short)'"
 #-----------------------
+#---       GITHUB       ---
+#-----------------------
+
+# add this to `ghm`
+alias ghfk="gh repo fork"
+alias ghprdev="gh pr create --base develop"
+
+# todo: if not main then check for master..
+alias ghprmst="gh pr create --base master"
+
+# @param repo name
+# @param description
+function ghrc() {
+	gh repo create $1 --public
+}
+function ghrcc() {
+	gh repo create $1 --public -c
+}
+
+# -----------------------
+# ---       GHQ       ---
+# -----------------------
+
+alias ghg="ghq get -p"
+alias ghC="ghq create"
+alias ghl="ghq list"
+alias ghr="ghq root"
+alias ghh="ghq help"
+
+#-----------------------
 #---       GPG       ---
 #-----------------------
 
@@ -327,6 +357,7 @@ alias ldot='ls -ld .*'
 
 # fix typos
 alias quit='exit'
+
 # tools
 alias te="${EDITOR-}"
 alias ide="${VISUAL-}"

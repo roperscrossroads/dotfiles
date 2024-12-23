@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+
+# NOTE: symlink all repos related to web browsing into a coe
+# 1. browser extensions are spread out across GHQ root.
+# 2. Take all of these and symlink them into:
+#       `~/code/web_browsers/extensions/<...>`
+# 3. With this it becomes easy to manually install extensions, which is
+#       necessary with chromium based browser IIRC
+
+# NOTE: Make this into a generalized util for setting up and managing web
+# browsers, tools and addons, so that ones browser usage becomes more reliable.
+
+# note: a lot of things are sync across browsers via Browser-Sync.
+# This means that I most likely only have to automate installing
+# local extensions, eg Surfingkeys.
+
+# note: interesting command for launching chromium/brave/chrome on mac
+# open -a chromium --args --load-extension=$PWD/build --force-dev-mode-highlighting --no-default-browser-check
+#
+# --load-extension=comma/separated/list/of/paths/to/extensions
+
+
+	# TERMINAL BASED BROWSERS
+	# https://itsfoss.com/terminal-web-browsers/
+	#
+	# nyxt
+	# https://github.com/atlas-engineer/nyxt
+
+function setup_browsers() (
+	source "$DOROTHY/sources/bash.bash"
+
+	# # improve performance
+	# if is-needle --quiet "setup-browsers" && ! is-needle --upgrade "setup-browsers" && ! is-needle --uninstall "setup-browsers" && command-exists {REPLACE_ME}; then
+	#   return 0
+	# fi
+
+	# FIX: create setup-util-for each browser
+
+	# TODO: [x] setup-util-qutebrowser
+
+
+	# TODO: [ ] FIREFOX / FORKS
+	# https://wiki.mozilla.org/Firefox/CommandLineOptions
+	# - arc?
+	# - zen
+
+	# VIVALDI?
+
+	local extensions=()
+
+	extensions=(
+		"brookhong/Surfingkeys;dist/production/chrome -> npm install; npm build"
+		"glacambre/firenvim;target/chrome             -> npm install; npm run build; npm run install_manifests"
+	)
+
+	trim_empty_entries() {
+		local input_array=("$@")
+		local new_array=()
+
+		echo "$@"
+
+		for element in "${input_array[@]}"; do
+			# if [[ -n "$element" ]]; then
+			# 	new_array+=("$element")
+			# fi
+			if test -z "$element"; then
+				continue
+			fi
+			new_array+=("$element")
+		done
+
+		# for part in "${parts[@]}"; do
+		# 	if test -z "$part"; then
+		# 		continue
+		# 	fi
+		# 	trimmed+=("$part")
+		# done
+
+		# Return the new array
+		echo-lines -- "${new_array[*]}"
+		# print_line ">${new_array[0]-}"
+		# print_line ">${new_array[1]-}"
+		# for l in $new_array; do
+		#   echo "elem: [$element]"
+		# 	print_line "$l"
+		# done
+	}
+
+	function trim_whitespace() {
+		local s=$1 res=''
+		res="${s#"${s%%[![:space:]]*}"}"
+		res="${res%%[[:space:]]}"
+		echo "$res"
+	}
+
+  # todo: refactor into its own command
+	function get_ghq_local_path {
+		local repo=$1 repo_path
+		repo_path=$(ghq list -p "$1")
+		if test -z "$repo_path"; then
+			ghm clone -p git@github.com:rvaiya/warpd.git
+			repo_path=$(ghq list -p "github.com/rvaiya/warpd")
+		fi
+		echo "$repo_path"
+	}
+
+	function parse_extension_string() {
+		local trimmed=()
+		local repo_path subdir parts subparts
+
+		IFS='->' read -ra parts <<<"$1"
+
+		# TODO: how can we refactor this into `array-trim`
+		for part in "${parts[@]}"; do
+			if test -z "$part"; then
+				continue
+			fi
+			trimmed+=("$part")
+		done
+
+		# FIX: requires # of 2
+		IFS=';' read -ra subparts <<<"${trimmed[0]}"
+
+		repo_path=$(get_ghq_local_path "${subparts[0]}")
+		subdir=${subparts[1]}
+
+		# FIX: requires # of 1 minimum
+		IFS=';' read -ra subparts <<<"${trimmed[1]}"
+		for s in "${subparts[@]}"; do
+			echo "$repo_path / $subdir -> $(trim_whitespace "$s")"
+		done
+
+		# TODO: if ! subdir exists || --force
+		#   build extension
+
+	}
+
+	for x in "${extensions[@]}"; do
+		# echo "$x"
+		parse_extension_string "$x"
+	done
+
+	# NOTE: how to save websites to desktop, preferably with bash/code
+	# https://askubuntu.com/questions/910494/run-chrome-webpage-as-desktop-application
+
+	### IN CHROME
+	# https://peter.sh/experiments/chromium-command-line-switches/
+
+	### IN BRAVE
+	# https://support.brave.com/hc/en-us/articles/360044860011-How-Do-I-Use-Command-Line-Flags-in-Brave-
+
+	## SAVE WEB APPS TO DESKTOP
+
+)
+
+# Fire if invoked standalone
+if test "$0" = "${BASH_SOURCE[0]}"; then
+	setup_browsers "$@"
+fi

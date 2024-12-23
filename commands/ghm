@@ -44,8 +44,8 @@ function ghm() (
   GHQ_ROOT=$(ghq root)
   GHQ_BACKUP_FILE="$DOROTHY/user/backups/ghq.bak"
   GITHUB_USER=$(git config github.user)
-  GHQ_GH_USER_PATH="/Users/hjalmarjakobsson/code/repos/github.com/$GITHUB_USER"
-  GHQ_GITHUB="/Users/hjalmarjakobsson/code/repos/github.com"
+  GHQ_GH_USER_PATH="$HOME/code/repos/github.com/$GITHUB_USER"
+  GHQ_GITHUB="$HOME/code/repos/github.com"
 
   pattern="code/repos"
   if [[ ! "$GHQ_ROOT" == *"$pattern"* ]]; then

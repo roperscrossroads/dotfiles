@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 function setup_user_symlinks() {
-	source "$DOROTHY/sources/strict.bash"
+	source "$DOROTHY/sources/bash.bash"
 
 	echo-style --h1 --green "LINK USER CONFIGS.."
 	export FORCE_LINK='yes'
 
-	GHQ_ROOT_GH_USER="$GHQ_ROOT/github.com/molleweide"
+	GHQ_ROOT_GH_USER="$GHQ_ROOT/github.com/ropersscrossroads"
 
 	for f in "$GHQ_ROOT_GH_USER"/xdg_configs/*; do
 		if test "$(basename "$f")" = "_"; then

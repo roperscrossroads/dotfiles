@@ -18,3 +18,12 @@ source "$DOROTHY/config/interactive.sh"
 
 
 source $HOME/.atuin/bin/env
+
+# load my fancy stuff
+for f in "$DOROTHY/user/sources/"*.sh; do
+  source "$f"
+done
+
+nman() {
+  nvim "+hide Man $1"
+}

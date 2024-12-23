@@ -8,16 +8,16 @@
 # TODO: It feels like the core also should be moved into a dorothy command so
 # that you can use reuse this easilly.
 
-DEBUG_FZF="yes"
+DEBUG_FZF="no"
 
 __print_lines(){
-        printf "%s\n" "$1"
+        #printf "%s\n" "$1"
       }
 
 __debug_lines(){
-      if (( "$DEBUG_FZF" == "yes" )); then
-        __print_lines "[sources/load_binds]: $1"
-      fi
+      #if (( "$DEBUG_FZF" == "yes" )); then
+      #  __print_lines "[sources/load_binds]: $1"
+      #fi
 }
 
 # NOTE: Should these binds be callable if one is not runnig a git command?

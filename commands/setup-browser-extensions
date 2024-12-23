@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# FIX: why isn't `npm` found in eval-helper??
+
+# NOTE: interesting command for launching chromium/brave/chrome on mac
+# open -a chromium --args --load-extension=$PWD/build --force-dev-mode-highlighting --no-default-browser-check
+#
+# --load-extension=comma/separated/list/of/paths/to/extensions
+
+function setup_browser_extensions() (
+	source "$DOROTHY/sources/bash.bash"
+
+	local extensions=()
+
+	# TODO: move this to config
+	extensions=(
+		"brookhong/Surfingkeys;dist/production/chrome -> npm install; npm build"
+		"glacambre/firenvim;target/chrome             -> npm install; npm run build; npm run install_manifests"
+	)
+
+	function parse_extension_string() {
+		local trimmed
+		local repo_path subdir parts subparts
+
+		IFS='->' read -ra parts <<<"$1"
+
+		mapfile -t trimmed <<<"$(array-trim-empty "${parts[@]}")"
+
+		# FIX: requires # of 2
+		IFS=';' read -ra subparts <<<"${trimmed[0]}"
+
+		repo_path=$(ghm-get-repo-path "${subparts[0]}")
+		subdir=${subparts[1]}
+
+		# FIX: requires # of 1 minimum
+		IFS=';' read -ra subparts <<<"${trimmed[1]}"
+		local cmds=()
+		for s in "${subparts[@]}"; do
+			cmds+=("$(string-trim "$s")")
+		done
+
+		echo-lines -- "$repo_path" "$(string-trim "$subdir")" "${cmds[@]}"
+	}
+
+	for x in "${extensions[@]}"; do
+		local ext_data repo subdir
+		mapfile -t ext_data <<<"$(parse_extension_string "$x")"
+		repo="${ext_data[0]}"
+		subdir="${ext_data[1]}"
+
+		cd "$repo" || exit
+		for cmd in "${ext_data[@]:2}"; do
+			eval-helper --wrap --no-quiet -- "$cmd"
+		done
+	done
+)
+
+# Fire if invoked standalone
+if test "$0" = "${BASH_SOURCE[0]}"; then
+	setup_browser_extensions "$@"
+fi

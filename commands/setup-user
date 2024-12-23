@@ -11,11 +11,11 @@
 
 # Functions =================================
 
-function pull_molleweide_latest() {
-  pushd $DOROTHY/user >/dev/null 2>&1
-  echo "doro user pwd: $PWD"
-  popd >/dev/null 2>&1
-}
+#function pull_molleweide_latest() {
+#  pushd $DOROTHY/user >/dev/null 2>&1
+#  echo "doro user pwd: $PWD"
+#  popd >/dev/null 2>&1
+#}
 
 # handle basic configs and special cases.
 # WARN: It turns out that the dorothy's symlink-helper command is very slow,
@@ -96,38 +96,6 @@ function setup_osx() {
   :
 }
 
-# FIX: setup-hammerspoon. it makes sense to have everything in a setup script
-function setup_hammerspoon() {
-  if is-mac; then
-    HAMMERSPOON_CONFIG_DIR="$HOME/code/config_hammerspoon"
-
-    if [ ! -d "$HOME/code/config_hammerspoon" ]; then
-      git clone git@github.com:molleweide/config_hammerspoon.git "$HAMMERSPOON_CONFIG_DIR"
-    fi
-
-    github.com/molleweide/config_hammerspoon
-
-    echo-style --h1="Setting up HAMMERSPOON.."
-
-    # brew install --cask hammerspoon # --appdir=/Applications
-
-    url="https://github.com/Hammerspoon/Spoons/raw/master/Spoons/SpoonInstall.spoon.zip"
-    destination=/tmp/SpoonInstall.spoon.zip
-    spoons_dir=$HOME/.config/hammerspoon/Spoons
-
-    if [ ! -d "$spoons_dir/SpoonInstall.spoon" ]; then
-      wget -nv $url -O $destination && unzip -d "$spoons_dir" "$destination"
-    fi
-
-    defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua"
-
-    # fix: how should I manage the hammerspoon config
-    symlink-helper --existing="$doom_nvim_dir" --symlink="$XDG_CONFIG_HOME/nvim"
-    symlink-file "$ghq_user/config_hammerspoon" "$XDG_CONFIG_HOME/hammerspoon"
-
-    :
-  fi
-}
 
 function setup_keyboard() {
   :
@@ -148,14 +116,14 @@ if ! command-exists -- ghq; then
 fi
 
 GHQ_ROOT=$(ghq root)
-GHQ_ROOT_GH_USER="$GHQ_ROOT/github.com/molleweide"
+GHQ_ROOT_GH_USER="$GHQ_ROOT/github.com/roperscrossroads"
 
-ghm restore "doom-nvim"
+#ghm restore "doom-nvim"
 
-symlink-helper --existing="$GHQ_ROOT_GH_USER/doom-nvim" --symlink="$XDG_CONFIG_HOME/nvim"
+#symlink-helper --existing="$GHQ_ROOT_GH_USER/doom-nvim" --symlink="$XDG_CONFIG_HOME/nvim"
 
 setup_tmux_user
 
-setup_neorg_notes
+#setup_neorg_notes
 
-setup_osx
+#setup_osx
