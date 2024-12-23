@@ -412,7 +412,7 @@ alias ugu='ug -Q -. --view=nvim'
 # # single character shortcuts - be sparing!
 # alias _='sudo'
 alias c='clear'
-alias d='dirs -v | head -10'
+#alias d='dirs -v | head -10'  # using d for "dorothy"
 # alias v='vim'
 alias h='history'
 

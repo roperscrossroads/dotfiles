@@ -20,6 +20,10 @@ if test -d "$XDG_DATA_HOME/neovim/bin"; then
 	PATH="$XDG_DATA_HOME/neovim/bin:$PATH"
 fi
 
+if test -d "$HOME/.local/share/gem/bin"; then
+	PATH="$HOME/.local/share/gem/bin:$PATH"
+fi
+
 # NVM_DIR="$HOME/.nvm"
 
 # choose your architecture for apple silicon
