@@ -1,8 +1,5 @@
 unsetopt PROMPT_SP # i believe this removes ^% sign in prompt
 
-# Maintain a stack of cd directory traversals for `popd`
-# setopt AUTO_PUSHD
-
 # Allow extended matchers like ^file, etc
 # set -o EXTENDED_GLOB
 
@@ -11,10 +8,11 @@ unsetopt PROMPT_SP # i believe this removes ^% sign in prompt
 
 # # Changing Directories
 # # http://zsh.sourceforge.net/Doc/Release/Options.html#Changing-Directories
-setopt auto_cd                 # if a command isn't valid, but is a directory, cd to that dir
-# setopt auto_pushd              # make cd push the old directory onto the directory stack
+# setopt auto_cd                 # if a command isn't valid, but is a directory, cd to that dir
+setopt AUTO_PUSHD              # make cd push the old directory onto the directory stack
 # setopt pushd_ignore_dups       # don’t push multiple copies of the same directory onto the directory stack
-# setopt pushd_minus             # exchanges the meanings of ‘+’ and ‘-’ when specifying a directory in the stack
+setopt AUTO_PUSHD             # exchanges the meanings of ‘+’ and ‘-’ when specifying a directory in the stack
+setopt CDABLE_VARS                 # expand the expression (allows 'cd -2/tmp')
 
 # # Completions
 # # http://zsh.sourceforge.net/Doc/Release/Options.html#Completion-2
@@ -28,7 +26,7 @@ setopt auto_cd                 # if a command isn't valid, but is a directory, c
 
 # # Expansion and Globbing
 # # http://zsh.sourceforge.net/Doc/Release/Options.html#Expansion-and-Globbing
-# setopt extended_glob           # use more awesome globbing features
+setopt extended_glob           # use more awesome globbing features
 # setopt glob_dots               # include dotfiles when globbing
 
 # # History
@@ -76,4 +74,4 @@ setopt auto_cd                 # if a command isn't valid, but is a directory, c
 # # http://zsh.sourceforge.net/Doc/Release/Options.html#Zle
 # setopt no_beep                # be quiet!
 # setopt combining_chars        # combine zero-length punctuation characters (accents) with the base character
-# setopt emacs                  # use emacs keybindings in the shell
+setopt emacs                  # use emacs keybindings in the shell

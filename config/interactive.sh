@@ -16,7 +16,6 @@ export DESU=desu
 # load defaults
 source "$DOROTHY/config/interactive.sh"
 
-
 source $HOME/.atuin/bin/env
 
 # load my fancy stuff

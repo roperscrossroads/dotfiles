@@ -3,7 +3,7 @@
 # use inline `export VAR=...` statements, for fish compatibility`
 
 # load defaults
-source "$DOROTHY/config/interactive.zsh"
+#source "$DOROTHY/config/interactive.zsh"
 
 # load cross shell `sh` files
 source "$DOROTHY/user/config/interactive.sh"

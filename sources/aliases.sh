@@ -14,6 +14,10 @@ alias rl="reload_aliases"
 
 alias il="zsh -il"
 
+alias editd-aliases="vim $DOROTHY/user/sources/aliases.sh"
+alias editd-dorothy-user="vim $DOROTHY/user"
+alias editd-envs="vim $DOROTHY/user/config/environment.bash"
+alias editd-xdg="vim $HOME/.config/dorothy/config.xdg"
 
 alias XDH="$XDG_DATA_HOME"
 
