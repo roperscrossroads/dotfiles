@@ -25,3 +25,6 @@ cargo install just
 cargo install zoxide
 cargo install onefetch
 setup-oh-my-zsh
+
+cargo install bob-nvim
+bob use stable
