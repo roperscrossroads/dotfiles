@@ -405,7 +405,7 @@ alias cat='bat --paging=never'
 alias bat='batcat'
 alias df=duf
 alias diff=colordiff
-#alias fd='fd --hidden'
+alias fd=fdfind
 alias nv='neovide --multigrid --notabs'
 alias ra=yazi
 alias vim=nvim
@@ -445,7 +445,6 @@ alias speedtest="wget -O /dev/null http://speed.transip.nl/10mb.bin"
 # alias ts="date +%Y%m%d%H%M%S"
 # alias timestamp="date '+%Y-%m-%d %H:%M:%S'"
 # alias datestamp="date '+%Y-%m-%d'"
-alias fd='find . -type d -name'
 alias ff='find . -type f -name'
 alias dud='du -d 1 -h'
 alias duf='du -sh *'
