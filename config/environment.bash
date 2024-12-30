@@ -16,8 +16,8 @@ GHQ_ROOT="$HOME/code/repos"
 GHQ_GITHUB="$GHQ_ROOT/github.com"
 
 # add bob-nvim to path
-if test -d "$XDG_DATA_HOME/neovim/bin"; then
-	PATH="$XDG_DATA_HOME/neovim/bin:$PATH"
+if test -d "$XDG_DATA_HOME/bob/nvim-bin"; then
+	PATH="$XDG_DATA_HOME/bob/nvim-bin:$PATH"
 fi
 
 if test -d "$HOME/.local/share/gem/bin"; then
