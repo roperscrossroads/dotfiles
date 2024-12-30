@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+get_plugins() {
+  echo "Cloning plugins..."
+
+  # Install plugins
+  git clone https://github.com/zsh-users/zsh-autosuggestions $ZSH/plugins/zsh-autosuggestions || { echo "Failed to clone zsh-autosuggestions"; exit 1; }
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH/plugins/zsh-syntax-highlighting || { echo "Failed to clone zsh-syntax-highlighting"; exit 1; }
+  git clone https://github.com/Aloxaf/fzf-tab $ZSH/plugins/fzf-tab || { echo "Failed to clone fzf-tab"; exit 1; }
+  git clone https://github.com/zsh-users/zsh-completions $ZSH/plugins/zsh-completions || { echo "Failed to clone zsh-completions"; exit 1; }
+  git clone https://github.com/so-fancy/diff-so-fancy $ZSH/plugins/diff-so-fancy || { echo "Failed to clone diff-so-fancy"; exit 1; }
+}
+
 function setup_util_oh_my_zsh() (
 	source "$DOROTHY/sources/bash.bash"
 
@@ -7,18 +18,25 @@ function setup_util_oh_my_zsh() (
 	# ZSH="$XDG_DATA_HOME/oh-my-zsh" sh install.sh
 	# else install to home.
 
-	if ! test -d "$HOME/.oh-my-zsh"; then
+	if ! test -d "$ZSH"; then
+	    echo "Installing Oh My Zsh..."
+
 		if command-exists curl; then
 			sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+			get_plugins
 		elif command-exists wget; then
 			sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+			get_plugins
 		elif command-exists fetch; then
 			sh -c "$(fetch -o - https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+			get_plugins
 		else
 			echo-error "Failed to install oh-my-zsh. Neither [curl] or [wget] command exists on system."
+			exit 1
 		fi
+
 	else
-		echo "OHMYZSH EXISTS"
+		echo "Oh My Zsh is already installed at $ZSH"
 	fi
 )
 

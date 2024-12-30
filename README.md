@@ -1,3 +1,5 @@
 # Dorothy User Configuration
 
-This is chop's user configuration for the [Dorothy](https://github.com/bevry/dorothy) dotfile ecosystem.
+This is my user configuration for the [Dorothy](https://github.com/bevry/dorothy) dotfile ecosystem.
+
+A work in progress.

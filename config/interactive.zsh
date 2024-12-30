@@ -26,11 +26,10 @@ done
 # set +x
 
 # Load oh-my-zsh if it exists on the system
-if test -d "$HOME/.oh-my-zsh"; then
+if test -d "$ZSH"; then
 	export DISABLE_UPDATE_PROMPT=true
-	export ZSH="$HOME/.oh-my-zsh"
 	# export ZSH_THEME='avit'
-	export plugins=(terminalapp osx autojump bower brew brew-cask cake coffee cp docker gem git heroku node npm nvm python ruby)
+	export plugins=(z git kubectl microk8s zsh-autosuggestions zsh-syntax-highlighting zsh-completions web-search colored-man-pages diff-so-fancy tmuxinator fzf-tab sudo)
 	if test -f "$ZSH/oh-my-zsh.sh"; then
 		source "$ZSH/oh-my-zsh.sh"
 	fi
