@@ -28,3 +28,9 @@ setup-oh-my-zsh
 
 cargo install bob-nvim
 bob use stable
+ln -s ~/.config/dorothy/config.xdg/nvim/config.lua ~/.config/.nvim_config.lua
+#todo ^ move this
+
+cargo install --locked --git https://github.com/sxyazi/yazi.git yazi-fm yazi-cli
+install latest fzf (debian one is old)
+install luarocks
