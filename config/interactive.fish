@@ -13,3 +13,4 @@ for file in "$DOROTHY/user/sources/"*.fish
     end
 end
 
+~/.local/bin/mise activate fish | source

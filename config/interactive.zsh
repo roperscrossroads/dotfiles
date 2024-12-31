@@ -16,7 +16,6 @@ for f in "$DOROTHY/user/sources/"*.zsh; do
     source "$f"
 done
 
-
 # # fzf support
 # github_fzf_helper="$GHQ_GITHUB/junegunn/fzf-git.sh/fzf-git.sh"
 # set -x
@@ -35,4 +34,5 @@ if test -d "$ZSH"; then
 	fi
 fi
 
+eval "$(~/.local/bin/mise activate zsh)"
 eval "$(atuin init zsh --disable-up-arrow)"

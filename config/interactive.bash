@@ -18,3 +18,5 @@ done
 
 export DOROTHY_THEME=oz
 export DESU=desu-bash
+
+eval "$(~/.local/bin/mise activate bash)"
