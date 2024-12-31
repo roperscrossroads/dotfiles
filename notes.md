@@ -13,6 +13,7 @@
 - https://github.com/bevry/dorothy
 - https://github.com/molleweide/dotfiles
 - https://github.com/Allaman/nvim
+- https://github.com/Allaman/dots
 - https://github.com/Piotr1215/dotfiles
 
 
@@ -34,3 +35,14 @@ ln -s ~/.config/dorothy/config.xdg/nvim/config.lua ~/.config/.nvim_config.lua
 cargo install --locked --git https://github.com/sxyazi/yazi.git yazi-fm yazi-cli
 install latest fzf (debian one is old)
 install luarocks
+
+https://mise.jdx.dev/installing-mise.html
+curl https://mise.jdx.dev/mise-latest-linux-x64 > ~/.local/bin/mise
+chmod +x ~/.local/bin/mise
+
+sh <(curl -L https://nixos.org/nix/install) --daemon
+
+nvim
+- lazy: install
+- checkhealth
+- Mason

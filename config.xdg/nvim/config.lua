@@ -45,7 +45,7 @@ return {
       enabled = true,
       opts = {
         enable_cmp_integration = true,
-        plugin_path = vim.fn.expand("$HOME/workspace/github.com/allaman/"),
+        plugin_path = vim.fn.expand("$HOME/dev/github.com/roperscrossroads/"),
       },
     },
     lf = {
@@ -122,7 +122,7 @@ return {
       lockfile = "~/.config/nvim/lazy-lock.json"
     },
     ltex = {
-      additional_lang = "de-DE",
+      additional_lang = "",
     },
     lualine = {
       extensions = { "fugitive", "fzf", "lazy", "neo-tree", "nvim-dap-ui", "quickfix", "symbols-outline", "toggleterm" },

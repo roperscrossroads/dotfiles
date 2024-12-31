@@ -61,7 +61,7 @@ return {
       end,
     },
     ltex = {
-      additional_lang = "de-DE", -- manually set a language in ltex-ls
+      additional_lang = "en-US", -- manually set a language in ltex-ls
     },
     noice = {
       enable = true, -- Noice heavily changes the Neovim UI ...
