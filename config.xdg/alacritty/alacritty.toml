@@ -1,4 +1,4 @@
-import = ["/home/chop/.config/alacritty/themes/Gotham.toml"]
+import = ["/home/chop/.config/alacritty/themes/1-ayu-dark.toml"]
 live_config_reload = true
 
 [keyboard]
@@ -37,6 +37,7 @@ shape = "Block"
 
 [env]
 TERM = "xterm-256color"
+COLORTERM = "truecolor"
 
 [font]
 builtin_box_drawing = true
