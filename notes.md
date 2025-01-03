@@ -42,7 +42,18 @@ chmod +x ~/.local/bin/mise
 
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
+https://github.com/sharkdp/fd/releases
+https://github.com/BurntSushi/ripgrep
+
+$ curl -LO https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep_14.1.0-1_amd64.deb
+$ sudo dpkg -i ripgrep_14.1.0-1_amd64.deb
+
 nvim
+- mkdir -p ~/dev/github.com/roperscrossroads
+- git clone git@github.com:Allaman/kustomize.nvim.git ~/dev/github.com/roperscrossroads/kustomize.nvim
+- git clone git@github.com:Allaman/emoji.nvim.git ~/dev/github.com/roperscrossroads/emoji.nvim
+- nvim
 - lazy: install
 - checkhealth
 - Mason
+

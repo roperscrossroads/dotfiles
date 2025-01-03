@@ -241,7 +241,6 @@ SETUP_UTILS=(
 	nu
 	prettier
 	python
-	ripgrep
 	sd
 	shellcheck
 	sshd

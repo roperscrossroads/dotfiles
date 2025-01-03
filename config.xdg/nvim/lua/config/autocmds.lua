@@ -135,7 +135,7 @@ api.nvim_create_autocmd(
     pattern = { "*.txt", "*.md", "*.tex", "*.typ" },
     callback = function()
       vim.opt.spell = true
-      vim.opt.spelllang = "en,de"
+      vim.opt.spelllang = "en"
     end,
     desc = "Enable spell checking for certain file types",
   }
